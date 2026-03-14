@@ -1,0 +1,92 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{enumitem}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{hyperref}
+
+\title{\textbf{Formal Specification: Micro:Bop Reaction Game}}
+\author{Micro:bit v2 Programming Challenge}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{Overview}
+The objective of this task is to implement a physical reaction game for the BBC micro:bit v2. The system will prompt the user with visual cues, and the user must provide the corresponding hardware input within a dynamically decreasing time limit. 
+
+\section*{System Requirements}
+The software must be written in MicroPython and utilize the \texttt{microbit}, \texttt{random}, and \texttt{music} modules. 
+
+\subsection*{1. Initialization Phase}
+Upon startup, the system must execute a countdown sequence:
+\begin{itemize}
+    \item Iteratively display the integers from 3 down to 1.
+    \item Pause for 500 milliseconds after each integer is displayed.
+    \item Clear the display after the countdown completes.
+\end{itemize}
+
+\subsection*{2. State Variables}
+Initialize the following game state variables before entering the main execution loop:
+\begin{itemize}
+    \item \texttt{score}: Initialized to 0.
+    \item \texttt{time\_limit}: Initialized to 2000 (representing milliseconds).
+\end{itemize}
+
+\subsection*{3. Main Execution Loop}
+The core game logic must run in an infinite loop (\texttt{while True}), executing the following sequence per iteration:
+
+\subsubsection*{3.1 Round Setup}
+\begin{enumerate}
+    \item Sleep for 500 milliseconds.
+    \item Scroll the string \texttt{"LOS GEHTS"} across the display with a delay of 20 milliseconds.
+    \item Generate a random integer, \texttt{action}, where $0 \le \texttt{action} \le 3$.
+    \item Clear the input buffers for Button A, Button B, and the Microphone's LOUD event to prevent false positives from previous rounds.
+\end{enumerate}
+
+\subsubsection*{3.2 Prompt Display}
+Display an image corresponding to the generated \texttt{action} integer:
+\begin{itemize}
+    \item \textbf{If 0:} Display \texttt{Image.ARROW\_W} (Target Input: Button A).
+    \item \textbf{If 1:} Display \texttt{Image.ARROW\_E} (Target Input: Button B).
+    \item \textbf{If 2:} Display \texttt{Image.TARGET} (Target Input: Touch Logo).
+    \item \textbf{If 3:} Display \texttt{Image.SQUARE} (Target Input: Loud Noise).
+\end{itemize}
+
+\subsubsection*{3.3 Input Polling Phase}
+\begin{enumerate}
+    \item Record the current \texttt{running\_time()} as the start time of the round.
+    \item Initialize a boolean flag \texttt{success} to \texttt{False}.
+    \item Enter a conditional polling loop that continues as long as the elapsed time (current time minus start time) is less than the \texttt{time\_limit}.
+    \item \textbf{Within the polling loop:}
+    \begin{itemize}
+        \item Check if the hardware input matching the current \texttt{action} has been triggered.
+        \item If the correct input is detected: set \texttt{success} to \texttt{True} and immediately break out of the polling loop.
+        \item Sleep for 10 milliseconds at the end of each polling iteration to ensure system stability.
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection*{3.4 Outcome Resolution}
+Evaluate the \texttt{success} flag upon exiting the polling loop:
+\begin{itemize}
+    \item \textbf{If \texttt{success} is True:}
+    \begin{enumerate}
+        \item Display \texttt{Image.YES}.
+        \item Play the music note \texttt{["C5:1"]}.
+        \item Increment the \texttt{score} by 1.
+        \item Sleep for 400 milliseconds.
+        \item \textit{Difficulty Scaling:} If the \texttt{score} is a multiple of 5 AND the \texttt{time\_limit} is strictly greater than 500: subtract 250 from the \texttt{time\_limit}.
+    \end{enumerate}
+    \item \textbf{If \texttt{success} is False:}
+    \begin{enumerate}
+        \item Display \texttt{Image.NO}.
+        \item Play the built-in melody \texttt{music.WAWAWAWAA}.
+        \item Sleep for 1000 milliseconds.
+        \item Scroll the string \texttt{"Score: "} concatenated with the current score, using a delay of 20 milliseconds. \textit{Note: The loop will then restart for the next round without resetting the score.}
+    \end{enumerate}
+\end{itemize}
+
+\end{document}
